@@ -5,22 +5,31 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContext<DataContext>(opt => opt.UseInMemoryDatabase("Library"));
+
+// PostgreSQL instead of InMemoryDatabase
+builder.Services.AddDbContext<DataContext>(opt =>
+    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnectionString")));
+
 builder.Services.AddScoped<IBookRepository, BookRepository>();
 
-var app = builder.Build();
+var app = builder.Build(); // Build app first
 
-using (var dbContext = new DataContext(new DbContextOptions<DataContext>()))
+// Seed the database
+using (var scope = app.Services.CreateScope())
 {
-    dbContext.Database.EnsureCreated();
+    var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+
+    if (!context.Authors.Any())
+    {
+        Seeder seeder = new Seeder();
+        context.Authors.AddRange(seeder.Authors);
+        context.Books.AddRange(seeder.Books);
+        context.SaveChanges();
+    }
 }
 
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
