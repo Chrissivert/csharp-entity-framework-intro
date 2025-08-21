@@ -2,14 +2,15 @@
 
 namespace exercise.webapi.Models
 {
+
+    // Model of author, meaning it represents the attributes and relations
+    // in the database, NOT what is sent
     public class Author
     {
         public int Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-
-        [JsonIgnore] // Todo: replace this with DTO approach
-        public ICollection<Book> Books { get; set; } = new List<Book>();
+        // public List<BookDTO> Books { get; set; }
     }
 }
